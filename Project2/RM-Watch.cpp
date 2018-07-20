@@ -16,6 +16,7 @@ bool SetConsoleColor(WORD forceGroundColor, WORD backGroundColor);
 
 void picture_get();
 void color_get();
+void velue_z();
 void judge(int first, int secend);
 void showpeacture(Mat peacture);
 bool SetConsoleColor(WORD forceGroundColor, WORD backGroundColor);
@@ -29,8 +30,8 @@ int RGB[3][Height][Width];//RGB == 012
 int R = 0, G = 1, B = 2, Y = 3;
 int HSV[3][Height][Width];//HSV == 012
 int H = 0, S = 1, V = 2;
-bool rgb_color[Height][Width][5] = { 0 };//WRGBY = 01234
-bool hsv_color[Height][Width][5] = { 0 };
+bool rgb_color[Height][Width][4] = { 0 };//RGBY = 0123
+bool hsv_color[Height][Width][4] = { 0 };
 Mat matSrc, matDst_RGB, matDst_HSV, matDst_GRAY;
 
 int main(int argc, char* argv[]) {
@@ -71,9 +72,9 @@ int main(int argc, char* argv[]) {
 				else matDst_GRAY.at<uchar>(row, col) = 0;
 			}
 		}
-		showpeacture(matDst_GRAY);
+		//showpeacture(matDst_GRAY);
 
-		RGB = 0;
+		velue_z();
 	}
 
 	return 0;
@@ -127,8 +128,8 @@ void color_get() {
 				}
 			}
 			if (HSV[H][row][col] >= 26 && HSV[H][row][col] <= 34) {
-				if (HSV[S][row][col] >= 43 && HSV[S][row][col] <= 255) {
-					if (HSV[V][row][col] >= 46 && HSV[V][row][col] <= 255) {
+				if (HSV[S][row][col] >= 70 && HSV[S][row][col] <= 255) {
+					if (HSV[V][row][col] >= 70 && HSV[V][row][col] <= 255) {
 						hsv_color[row][col][Y] = 1;
 					}
 				}
@@ -137,6 +138,17 @@ void color_get() {
 	}
 }
 
+void velue_z() {
+	int i, j, k;
+	for (k = 0; k < 4; k++) {
+		for (i = 0; i < Width; i++) {
+			for (j = 0; j < Height; j++) {
+				hsv_color[i][j][k] = 0;
+				rgb_color[i][j][k] = 0;
+			}
+		}
+	}
+}
 void judge(int first, int second) {
 	int change = 13;
 	if (first <= change && second <= change) {
