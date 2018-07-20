@@ -14,127 +14,129 @@ using namespace cv;
 
 bool SetConsoleColor(WORD forceGroundColor, WORD backGroundColor);
 
-void compare(int x[], int y, int z[], int r);
+void picture_get();
+void color_get();
 void judge(int first, int secend);
 void showpeacture(Mat peacture);
 bool SetConsoleColor(WORD forceGroundColor, WORD backGroundColor);
 
-const int High = 16, Width = 16;
-const int Half_High = High / 2, Half_Width = Width / 2, Sum = High * Width, Half_Sum = Sum / 2;
+//const int Height = 5, Width = 5;初始化尺寸
+const int Height = 176;
+const int Width = 144;
+
+//初始化变量
+int RGB[3][Height][Width];//RGB == 012
+int R = 0, G = 1, B = 2, Y = 3;
+int HSV[3][Height][Width];//HSV == 012
+int H = 0, S = 1, V = 2;
+bool rgb_color[Height][Width][5] = { 0 };//WRGBY = 01234
+bool hsv_color[Height][Width][5] = { 0 };
+Mat matSrc, matDst_RGB, matDst_HSV, matDst_GRAY;
 
 int main(int argc, char* argv[]) {
-	//初始化变量
-
-	int i, j, tmp = 0, tmpl = 0;
 	/*图像分辨率定义初始化*/
+	int size = Height * Width, Half_size = size / 2;
 
-	int size = High * Width, Half_size = size / 2;
-	int *left_arr1 = new int[Half_size], *left_arr2 = new int[Half_size];
-	int	*right_arr1 = new int[Half_size], *right_arr2 = new int[Half_size];
-
-	int left_iAvg1 = 0, left_iAvg2 = 0, right_iAvg1 = 0, right_iAvg2 = 0;
-	int iDiffNum1 = 0, iDiffNum2 = 0;
-
-	Mat matSrc, matDst1, matDst2;
-	//初始化摄像头并读取->matDst1
-	VideoCapture cap(1);
+	//初始化摄像头并读取->matDst
+	VideoCapture cap(2);
 	if (!cap.isOpened()) {
 		return -1;
 	}
-	for (i = 0; i < 10; i++) {
-		Sleep(10);
+
+	for (int i = 0; i < 10; i++) {
 		cap >> matSrc;
-		resize(matSrc, matDst1, Size(High, Width), 0, 0, INTER_NEAREST);
-		cvtColor(matDst1, matDst1, CV_BGR2GRAY);
+		resize(matSrc, matDst_RGB, Size(Height, Width), 0, 0, INTER_NEAREST);//获取RGB图像并变换尺寸
+		cvtColor(matDst_RGB, matDst_HSV, COLOR_BGR2HSV);//RGB->HSV
+		//cvtColor(matDst1, matDst1, CV_BGR2GRAY);
 	}
-
-	showpeacture(matDst1);
-
-	//初始化图像并分析
-
-	for (i = 0; i < Width; i++) {
-		uchar* data1 = matDst1.ptr<uchar>(i);
-		for (j = 0; j < Half_Width; j++) {
-			left_arr1[tmp] = data1[j];
-			left_iAvg1 += left_arr1[tmp];
-			tmp++;
-		}
-		for (j = Half_Width; j < Width; j++) {
-			right_arr1[tmpl] = data1[j];
-			right_iAvg1 += right_arr1[tmpl];
-			tmpl++;
-		}
-	}
-	left_iAvg1 /= Half_Sum;
-	right_iAvg1 /= Half_Sum;
-
-	cout << left_iAvg1 << endl << right_iAvg1 << endl;
-
-	compare(left_arr1, left_iAvg1, right_arr1, right_iAvg1);//判断是否改变。变大：1 不变：0 变小：-1
-
-	//初始化结束，开始监控
+	showpeacture(matDst_RGB);
 
 	while (1) {
-		//读取摄像头->matDst2
 		cap >> matSrc;
-		//imshow("camera", matSrc);//显示
-		resize(matSrc, matDst2, Size(High, Width), 0, 0, INTER_NEAREST);
-		cvtColor(matDst2, matDst2, CV_BGR2GRAY);
-		tmp = tmpl = 0;
+		resize(matSrc, matDst_RGB, Size(Height, Width), 0, 0, INTER_NEAREST);//获取RGB图像并变换尺寸
+		cvtColor(matDst_RGB, matDst_HSV, COLOR_BGR2HSV);//RGB->HSV
 
-		for (i = 0; i < Width; i++) {
-			uchar* data2 = matDst2.ptr<uchar>(i);
-			for (j = 0; j < Half_Width; j++) {
-				left_arr2[tmp] = data2[j];
-				left_iAvg2 += left_arr2[tmp];
-				tmp++;
-			}
-			for (j = Half_Width; j < Width; j++) {
-				right_arr2[tmpl] = data2[j];
-				right_iAvg2 += right_arr2[tmpl];
-				tmpl++;
+		//RGB/HSV图像读取
+		picture_get();
+		//使用RGB/HSV图像获取颜色
+		color_get();
+		cvtColor(matDst_RGB, matDst_GRAY, CV_BGR2GRAY);//初始化灰度图像，为二值化做准备
+		for (int row = 0; row < Width; row++)
+		{
+			for (int col = 0; col < Height; col++)
+			{
+				if (hsv_color[row][col][Y] == 1) {
+					matDst_GRAY.at<uchar>(row, col) = 255;
+				}
+				else matDst_GRAY.at<uchar>(row, col) = 0;
 			}
 		}
+		showpeacture(matDst_GRAY);
 
-		left_iAvg2 /= Half_Sum;
-		right_iAvg2 /= Half_Sum;
-
-		compare(left_arr2, left_iAvg2, right_arr2, right_iAvg2);//判断
-
-		for (i = 0; i < Half_Sum; i++) {
-			if (left_arr1[i] != left_arr2[i])
-				++iDiffNum1;
-			if (right_arr1[i] != right_arr2[i])
-				++iDiffNum2;
-		}
-
-		cout << "iDffNum1=" << iDiffNum1 << endl;
-		cout << "iDffNum2=" << iDiffNum2 << endl;
-		cout << "gray1=" << left_iAvg2 << endl;
-		cout << "gray2=" << right_iAvg2 << endl;
-
-		judge(iDiffNum1, iDiffNum2);//最终判断
-		SetConsoleColor(FOREGROUND_INTENSITY, FOREGROUND_INTENSITY);
-		//iDiffNum1左，iDiffNum2右
-
-		iDiffNum1 = iDiffNum2 = 0;
-
-		Sleep(10);
+		RGB = 0;
 	}
+
 	return 0;
 }
-void compare(int x[], int y, int z[], int r) {
-	int i;
-	int change = 6;
-	for (i = 0; i < Half_Sum; i++) {
-		if (x[i] - y > change) x[i] = 1;//变大
-		else if (x[i] - y <= change && y - x[i] <= change)x[i] = 0;//不变
-		else if (y - x[i] > change)x[i] = -1;//变小
-		if (z[i] - r > change)z[i] = 1;
-		else if (z[i] - r <= change && r - z[i] <= change)z[i] = 0;
-		else if (r - z[i] > change)z[i] = -1;
+
+void picture_get() {
+	for (int row = 0; row < Width; row++)
+	{
+		for (int col = 0; col < Height; col++)
+		{
+			Vec3i bgr = matDst_RGB.at<Vec3b>(row, col);//用Vec3b也行
+			RGB[R][row][col] = bgr.val[2];
+			RGB[G][row][col] = bgr.val[1];
+			RGB[B][row][col] = bgr.val[0];
+			Vec3i hsv = matDst_HSV.at<Vec3b>(row, col);
+			HSV[H][row][col] = hsv.val[0];
+			HSV[S][row][col] = hsv.val[1];
+			HSV[V][row][col] = hsv.val[2];
+		}
 	}
 }
+void color_get() {
+	for (int row = 0; row < Width; row++)
+	{
+		for (int col = 0; col < Height; col++)
+		{
+			if (RGB[R][row][col] * 1.5 > RGB[1][row][col] + RGB[1][row][col])rgb_color[row][col][R] = 1;
+			else if (RGB[G][row][col] * 1.5 > RGB[2][row][col] + RGB[0][row][col])rgb_color[row][col][G] = 1;
+			else if (RGB[B][row][col] * 1.5 > RGB[2][row][col] + RGB[1][row][col])rgb_color[row][col][B] = 1;
+			else rgb_color[row][col][5] = 1;
+
+			if (HSV[H][row][col] >= 156 && HSV[H][row][col] <= 180) {
+				if (HSV[S][row][col] >= 43 && HSV[S][row][col] <= 255) {
+					if (HSV[V][row][col] >= 46 && HSV[V][row][col] <= 255) {
+						hsv_color[row][col][R] = 1;
+					}
+				}
+			}
+			if (HSV[H][row][col] >= 35 && HSV[H][row][col] <= 77) {
+				if (HSV[S][row][col] >= 43 && HSV[S][row][col] <= 255) {
+					if (HSV[V][row][col] >= 46 && HSV[V][row][col] <= 255) {
+						hsv_color[row][col][G] = 1;
+					}
+				}
+			}
+			if (HSV[H][row][col] >= 100 && HSV[H][row][col] <= 124) {
+				if (HSV[S][row][col] >= 43 && HSV[S][row][col] <= 255) {
+					if (HSV[V][row][col] >= 46 && HSV[V][row][col] <= 255) {
+						hsv_color[row][col][B] = 1;
+					}
+				}
+			}
+			if (HSV[H][row][col] >= 26 && HSV[H][row][col] <= 34) {
+				if (HSV[S][row][col] >= 43 && HSV[S][row][col] <= 255) {
+					if (HSV[V][row][col] >= 46 && HSV[V][row][col] <= 255) {
+						hsv_color[row][col][Y] = 1;
+					}
+				}
+			}
+		}
+	}
+}
+
 void judge(int first, int second) {
 	int change = 13;
 	if (first <= change && second <= change) {
