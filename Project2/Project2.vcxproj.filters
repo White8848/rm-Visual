@@ -18,5 +18,13 @@
     <ClCompile Include="RM-Watch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="trace.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="trace.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
