@@ -9,23 +9,23 @@ int iHighH, iHighS, iHighV;
 
 void chose_color(int color) {
 	if (color == 'Red') {
-		iLowH = 100; iHighH = 100;
-		iLowS = 100; iHighS = 100;
-		iLowV = 100; iHighV = 100;
+		iLowH = 0; iHighH = 10;
+		iLowS = 140; iHighS = 255;
+		iLowV = 0; iHighV = 255;
 	}
 	if (color == 'Gren') {
-		iLowH = 100; iHighH = 100;
-		iLowS = 100; iHighS = 100;
-		iLowV = 100; iHighV = 100;
+		iLowH = 66; iHighH = 74;
+		iLowS = 250; iHighS = 255;
+		iLowV = 0; iHighV = 255;
 	}
 	if (color == 'Blue') {
-		iLowH = 100; iHighH = 100;
-		iLowS = 100; iHighS = 100;
-		iLowV = 100; iHighV = 100;
+		iLowH = 106; iHighH = 110;
+		iLowS = 250; iHighS = 255;
+		iLowV = 0; iHighV = 255;
 	}
 	if (color == 'Ylow') {
-		iLowH = 17; iHighH = 26;
-		iLowS = 170; iHighS = 255;
+		iLowH = 16; iHighH = 30;
+		iLowS = 155; iHighS = 230;
 		iLowV = 0; iHighV = 255;
 	}
 }
