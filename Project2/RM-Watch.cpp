@@ -38,6 +38,8 @@ Mat scaledImage;//线性变换后的八位无符号整型的图
 int thresh = 30; //当前阈值
 int max_thresh = 175; //最大阈值
 
+Scalar Red(0, 0, 255), Green(0, 0, 255), Blue(0, 0, 255), Yellow(0, 0, 255);
+
 void drawRect(const RotatedRect &box, Mat &dst) {
 	Point2f vertex[4];
 	box.points(vertex);
@@ -103,47 +105,48 @@ int main(int argc, char* argv[]) {
 		cap >> matSrc;
 		resize(matSrc, matDst_RGB, Size(x, y), 0, 0, INTER_NEAREST);//获取RGB图像并变换尺寸
 		cvtColor(matDst_RGB, matDst_HSV, COLOR_BGR2HSV);//RGB->HSV
-		for (int i = 0; i < 4; i++) {
-			///////////////////////////////////////////////
-			chose_color(i);//选择要识别的颜色//Red,Blue,Gren,Ylow
-			///////////////////////////////////////////////
-			inRange(matDst_HSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), matDst_GRAY[i]);
-			if (iHighH == 180) {
-				inRange(matDst_HSV, Scalar(0, iLowS, iLowV), Scalar(10, iHighS, iHighV), matDst_GRAY[4]);
-				for (int r = 0; r < y; r++) {
-					for (int j = 0; j < x; j++) {
-						if (matDst_GRAY[4].at<uchar>(r, j) == 255) {
-							matDst_GRAY[i].at<uchar>(r, j) = 255;
-						}
-					}
-				}
-			}
-
-			Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
-			Mat element2 = getStructuringElement(MORPH_RECT, Size(5, 5));
-			//开操作
-			morphologyEx(matDst_GRAY[i], matDst_GRAY[i], MORPH_OPEN, element);
-			//闭操作 (连接一些连通域)
-			morphologyEx(matDst_GRAY[i], matDst_GRAY[i], MORPH_CLOSE, element2);
-			blur(matDst_GRAY[i], matDst_GRAY[i], Size(2, 2));
-
-			Mat matDst_GRAY_1 = Mat::zeros(matDst_GRAY[i].rows, matDst_GRAY[i].cols, CV_8UC3);
-			vector<vector<Point>> contours;
-			vector<Vec4i> hierarchy;
-			findContours(matDst_GRAY[i], contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
-			int index = 0;
-
-			constexpr auto sizeLimit = 8000.0;
-			if (contours.size() > 0) {
-				//RotatedRect max = minAreaRect(Mat(contours[0]));
-				for (auto contour : contours) {
-					auto rect = minAreaRect(Mat(contour));
-					if (rect.size.width * rect.size.height > sizeLimit) {
-						drawRect(rect, matDst_RGB);
+		//for (int i = 0; i < 4; i++) {
+		int i = 1;
+		///////////////////////////////////////////////
+		chose_color(i);//选择要识别的颜色//Red,Blue,Gren,Ylow
+		///////////////////////////////////////////////
+		inRange(matDst_HSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), matDst_GRAY[i]);
+		if (iHighH == 180) {
+			inRange(matDst_HSV, Scalar(0, iLowS, iLowV), Scalar(10, iHighS, iHighV), matDst_GRAY[4]);
+			for (int r = 0; r < y; r++) {
+				for (int j = 0; j < x; j++) {
+					if (matDst_GRAY[4].at<uchar>(r, j) == 255) {
+						matDst_GRAY[i].at<uchar>(r, j) = 255;
 					}
 				}
 			}
 		}
+
+		Mat element = getStructuringElement(MORPH_RECT, Size(5, 5));
+		Mat element2 = getStructuringElement(MORPH_RECT, Size(5, 5));
+		//开操作
+		morphologyEx(matDst_GRAY[i], matDst_GRAY[i], MORPH_OPEN, element);
+		//闭操作 (连接一些连通域)
+		morphologyEx(matDst_GRAY[i], matDst_GRAY[i], MORPH_CLOSE, element2);
+		blur(matDst_GRAY[i], matDst_GRAY[i], Size(2, 2));
+
+		Mat matDst_GRAY_1 = Mat::zeros(matDst_GRAY[i].rows, matDst_GRAY[i].cols, CV_8UC3);
+		vector<vector<Point>> contours;
+		vector<Vec4i> hierarchy;
+		findContours(matDst_GRAY[i], contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
+		int index = 0;
+
+		constexpr auto sizeLimit = 8000.0;
+		if (contours.size() > 0) {
+			//RotatedRect max = minAreaRect(Mat(contours[0]));
+			for (auto contour : contours) {
+				auto rect = minAreaRect(Mat(contour));
+				if (rect.size.width * rect.size.height > sizeLimit) {
+					drawRect(rect, matDst_RGB);
+				}
+			}
+		}
+		//}
 		//imshow("GRAY", matDst_GRAY[0]);
 		imshow("RGB", matDst_RGB);
 		if (waitKey(50) == 27)

@@ -14,8 +14,8 @@ void chose_color(int color) {
 		iLowV = 0; iHighV = 255;
 	}
 	if (color == 1) {
-		iLowH = 40; iHighH = 77;
-		iLowS = 125; iHighS = 255;
+		iLowH = 66; iHighH = 80;
+		iLowS = 130; iHighS = 255;
 		iLowV = 0; iHighV = 255;
 	}
 	if (color == 2) {
